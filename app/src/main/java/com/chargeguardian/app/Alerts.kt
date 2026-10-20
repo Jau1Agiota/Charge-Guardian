@@ -23,7 +23,8 @@ class Alerts(private val context: Context) {
     private fun open(): PendingIntent = PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     fun ongoing(): Notification = NotificationCompat.Builder(context, "monitoring")
         .setSmallIcon(R.drawable.ic_notification).setContentTitle("Charge Guardian is monitoring")
-        .setContentText("Waiting for battery and charger changes").setContentIntent(open()).setOngoing(true).setSilent(true).build()
+        .setContentText("Waiting for battery and charger changes").setContentIntent(open())
+        .setCategory(NotificationCompat.CATEGORY_SERVICE).setOngoing(true).setSilent(true).build()
     suspend fun send(threshold: Int, test: Boolean = false): Boolean {
         if (!allowed()) return false
         val appearance = Store(context).settings.first().appearance

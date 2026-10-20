@@ -1,4 +1,8 @@
-<!-- Silhouette traced from the lightning bolt in assets/Cozy Neon Battery Hug.png. -->
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-    <path android:fillColor="#FFFFFFFF" android:pathData="M17.8,2 L6.2,12.3 L10,13.4 L6.6,22 L17.6,11.3 L13.3,10.2 Z" />
+<!-- Dedicated notification alpha mask: white battery outline/cap and lightning bolt. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd"
+        android:pathData="M9,1 H15 V3 H20 V23 H4 V3 H9 Z M6,5 V21 H18 V5 Z" />
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M13,7 L8,14 H11 L10,19 L16,11 H13 L14,7 Z" />
 </vector>

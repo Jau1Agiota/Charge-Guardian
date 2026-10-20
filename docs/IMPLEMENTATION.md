@@ -1,6 +1,6 @@
 # Stage 1 implementation report
 
-Historical validation for version 1.0.0. For the current APK and results, see [Stage 1.1](STAGE_1_1.md).
+Historical validation for version 1.0.0. For the current APK and results, see [Stage 1.2](STAGE_1_2.md).
 
 ## Monitoring approach
 

@@ -6,6 +6,9 @@ import android.app.Notification
 import android.app.NotificationManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Path
+import android.graphics.RectF
+import kotlin.math.*
 import android.graphics.drawable.AdaptiveIconDrawable
 import androidx.test.core.app.ApplicationProvider
 import java.io.File
@@ -38,23 +41,82 @@ class IconNotificationTest {
         }
     }
 
-    @Test fun notificationBoltIsWhiteTransparentAndLegibleAtSmallSizes() {
+    @Test fun launcherLayersAndCommonMasksKeepArtworkProminentAndCriticalDetailsSafe() {
+        val icon = app.getDrawable(R.mipmap.ic_launcher) as AdaptiveIconDrawable
+        val foreground = Bitmap.createBitmap(216, 216, Bitmap.Config.ARGB_8888)
+        icon.foreground.setBounds(0, 0, 216, 216)
+        icon.foreground.draw(Canvas(foreground))
+        assertEquals(0, android.graphics.Color.alpha(foreground.getPixel(0, 0)))
+        assertEquals(255, android.graphics.Color.alpha(foreground.getPixel(108, 108)))
+        save(foreground, "foreground-layer")
+        val background = Bitmap.createBitmap(216, 216, Bitmap.Config.ARGB_8888)
+        icon.background.setBounds(0, 0, 216, 216)
+        icon.background.draw(Canvas(background))
+        assertEquals(android.graphics.Color.rgb(9, 12, 9), background.getPixel(0, 0))
+        save(background, "background-layer")
+
+        val visibleColumns = (0 until 216).filter { x ->
+            (0 until 216).any { y -> android.graphics.Color.alpha(foreground.getPixel(x, y)) >= 128 }
+        }
+        val artDp = (visibleColumns.last() - visibleColumns.first() + 1) * 108f / 216f
+        assertTrue("Prominent foreground without excessive inset", artDp in 57f..59f)
+        // Source-image landmarks: crown/flyaway hair, left hair, face and battery cap/body/base.
+        val landmarks = listOf(600f to 0f, 950f to 0f, 70f to 430f, 230f to 450f,
+            680f to 520f, 1015f to 270f, 1140f to 515f, 740f to 895f)
+        landmarks.forEach { (x, y) ->
+            val dx = (x / 1254f - .5f) * artDp
+            val dy = (y / 1254f - .5f) * artDp
+            assertTrue("Critical source landmark ($x,$y) inside 66dp safe circle", hypot(dx, dy) <= 33f)
+        }
+        for (size in listOf(48, 144)) for (mask in listOf("circle", "rounded-square", "squircle")) {
+            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            val path = Path()
+            when (mask) {
+                "circle" -> path.addCircle(size / 2f, size / 2f, size / 2f, Path.Direction.CW)
+                "rounded-square" -> path.addRoundRect(RectF(0f, 0f, size.toFloat(), size.toFloat()), size * .22f, size * .22f, Path.Direction.CW)
+                else -> {
+                    for (degree in 0..360) {
+                        val angle = Math.toRadians(degree.toDouble())
+                        val x = (size / 2.0 * (1 + sign(cos(angle)) * sqrt(abs(cos(angle))))).toFloat()
+                        val y = (size / 2.0 * (1 + sign(sin(angle)) * sqrt(abs(sin(angle))))).toFloat()
+                        if (degree == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                    }
+                    path.close()
+                }
+            }
+            canvas.clipPath(path)
+            // 108dp layers extend 18dp beyond each edge of the central 72dp viewport.
+            val offset = size / 4
+            for (layer in listOf(icon.background, icon.foreground)) {
+                layer.setBounds(-offset, -offset, size + offset, size + offset)
+                layer.draw(canvas)
+            }
+            assertEquals(255, android.graphics.Color.alpha(bitmap.getPixel(size / 2, size / 2)))
+            save(bitmap, "launcher-$mask-${size}px")
+        }
+    }
+
+    @Test fun notificationBatteryAndBoltIsWhiteTransparentAndLegibleAtSmallSizes() {
         for (size in listOf(18, 24, 32)) {
             val icon = requireNotNull(app.getDrawable(R.drawable.ic_notification))
             val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
             icon.setBounds(0, 0, size, size)
             icon.draw(Canvas(bitmap))
-            var visible = 0
+            var alphaCoverage = 0L
             for (y in 0 until size) for (x in 0 until size) {
                 val pixel = bitmap.getPixel(x, y)
                 if (android.graphics.Color.alpha(pixel) > 0) {
-                    visible++
+                    alphaCoverage += android.graphics.Color.alpha(pixel)
                     assertEquals(0xFFFFFF, pixel and 0xFFFFFF)
                 }
             }
-            assertTrue("Recognizable silhouette at ${size}px", visible > size * size * 0.08)
-            assertTrue("No opaque notification square at ${size}px", visible < size * size * 0.45)
+            assertTrue("Recognizable silhouette at ${size}px", alphaCoverage > size * size * 255 * 0.20)
+            assertTrue("No opaque notification square at ${size}px", alphaCoverage < size * size * 255 * 0.45)
             assertEquals(0, android.graphics.Color.alpha(bitmap.getPixel(0, 0)))
+            // Measure alpha area, not AA fringe count; verify a real hollow battery, not a filled box.
+            assertEquals(0, android.graphics.Color.alpha(bitmap.getPixel(size * 7 / 24, size * 7 / 24)))
+            assertEquals(255, android.graphics.Color.alpha(bitmap.getPixel(size * 5 / 24, size * 10 / 24)))
             save(bitmap, "notification-${size}px")
         }
     }
@@ -72,10 +134,24 @@ class IconNotificationTest {
                 assertEquals(R.drawable.ic_notification, notification.smallIcon.resId)
                 assertEquals(appearance.accent.toInt(), notification.color)
                 assertEquals("battery_alerts", notification.channelId)
+                assertEquals(Notification.CATEGORY_REMINDER, notification.category)
+                assertEquals(NotificationManager.IMPORTANCE_HIGH, manager.getNotificationChannel(notification.channelId).importance)
                 assertTrue(notification.extras.getString(Notification.EXTRA_TITLE)!!.contains("Charge Guardian"))
                 assertEquals("Battery reached 96%. Time to unplug your charger!", notification.extras.getString(Notification.EXTRA_TEXT))
             }
         }
+    }
+
+    @Test fun monitoringHasItsOwnQuietChannelAndValidSmallIcon() {
+        val alerts = Alerts(app)
+        val notification = alerts.ongoing()
+        assertEquals(R.drawable.ic_notification, notification.smallIcon.resId)
+        assertEquals("monitoring", notification.channelId)
+        assertEquals(Notification.CATEGORY_SERVICE, notification.category)
+        assertTrue(notification.flags and Notification.FLAG_ONGOING_EVENT != 0)
+        assertEquals(NotificationManager.IMPORTANCE_LOW, app.getSystemService(NotificationManager::class.java)
+            .getNotificationChannel(notification.channelId).importance)
+        assertEquals("Charge Guardian", app.applicationInfo.loadLabel(app.packageManager).toString())
     }
 
     private fun save(bitmap: Bitmap, name: String) {
