@@ -1,5 +1,7 @@
 # Stage 1.1 — UI, themes and icons
 
+Historical report. See [Stage 1.2](STAGE_1_2.md) for the current icon resources and APK.
+
 **Version 1.1.0 (2)** · `com.chargeguardian.app` · Android 8+ · target API 36.
 
 ## Changes
