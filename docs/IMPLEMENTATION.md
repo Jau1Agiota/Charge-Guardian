@@ -1,5 +1,7 @@
 # Stage 1 implementation report
 
+Historical validation for version 1.0.0. For the current APK and results, see [Stage 1.1](STAGE_1_1.md).
+
 ## Monitoring approach
 
 The user grants notification permission and explicitly enables monitoring from the visible activity. An ongoing, low-importance foreground-service notification makes continuous operation visible. The service uses `specialUse`, declares `FOREGROUND_SERVICE_SPECIAL_USE` and describes the subtype in the manifest. Battery-threshold observation is not a data-sync, connected-device, location or short-service workload; using those types would misrepresent it. Google Play distribution would require review of this special-use justification; this stage delivers a sideloadable debug app and does not claim Play approval.

@@ -1,0 +1,4 @@
+<!-- Silhouette traced from the lightning bolt in assets/Cozy Neon Battery Hug.png. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M17.8,2 L6.2,12.3 L10,13.4 L6.6,22 L17.6,11.3 L13.3,10.2 Z" />
+</vector>

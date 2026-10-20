@@ -1,5 +1,6 @@
 package com.chargeguardian.app
 
+import kotlinx.coroutines.flow.first
 import android.Manifest
 import android.app.*
 import android.content.*
@@ -21,15 +22,17 @@ class Alerts(private val context: Context) {
         NotificationManagerCompat.from(context).areNotificationsEnabled() && manager.getNotificationChannel("battery_alerts").importance != NotificationManager.IMPORTANCE_NONE
     private fun open(): PendingIntent = PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     fun ongoing(): Notification = NotificationCompat.Builder(context, "monitoring")
-        .setSmallIcon(R.drawable.ic_battery).setContentTitle("Charge Guardian is monitoring")
+        .setSmallIcon(R.drawable.ic_notification).setContentTitle("Charge Guardian is monitoring")
         .setContentText("Waiting for battery and charger changes").setContentIntent(open()).setOngoing(true).setSilent(true).build()
-    fun send(threshold: Int, test: Boolean = false): Boolean {
+    suspend fun send(threshold: Int, test: Boolean = false): Boolean {
         if (!allowed()) return false
+        val appearance = Store(context).settings.first().appearance
         return try {
             manager.notify(if (test) 3 else 2, NotificationCompat.Builder(context, "battery_alerts")
-                .setSmallIcon(R.drawable.ic_battery).setContentTitle(if (test) "Charge Guardian • Test" else "Charge Guardian • Battery alert")
+                .setSmallIcon(R.drawable.ic_notification).setContentTitle(if (test) "Charge Guardian • Test" else "Charge Guardian • Battery alert")
                 .setContentText("Battery reached $threshold%. Time to unplug your charger!")
                 .setStyle(NotificationCompat.BigTextStyle().bigText("Battery reached $threshold%. Time to unplug your charger!"))
+                .setColor(appearance.accent.toInt())
                 .setContentIntent(open()).setCategory(NotificationCompat.CATEGORY_REMINDER)
                 .setPriority(NotificationCompat.PRIORITY_HIGH).setAutoCancel(true).build())
             true
