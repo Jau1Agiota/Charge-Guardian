@@ -1,6 +1,6 @@
 # Charge Guardian
 
-A native, offline Android battery alert app. Kotlin, Jetpack Compose / Material 3, minimal MVVM, Preferences DataStore. Package `com.chargeguardian.app`, version **1.2.0 (3)**. Android 8+; compiles and targets Android 16 (API 36).
+A native, offline Android battery alert app. Kotlin, Jetpack Compose / Material 3, minimal MVVM, Preferences DataStore. Package `com.chargeguardian.app`, version **1.2.1 (4)**. Android 8+; compiles and targets Android 16 (API 36).
 
 ## Build and install
 
@@ -19,4 +19,4 @@ Grant notifications, enable Monitoring while the app is open, and leave the ongo
 
 Electric Neon is the default dark theme; choose Neon Mint in Appearance using the palette icon. Help (`?`) contains Zepp, HyperOS and troubleshooting instructions. Both themes and the alert threshold persist locally.
 
-See [Stage 1.2 icon corrections](docs/STAGE_1_2.md), [Stage 1.1 changes and validation](docs/STAGE_1_1.md), [implementation and validation](docs/IMPLEMENTATION.md) and the [physical-device checklist](docs/DEVICE_TEST_CHECKLIST.md). Android and HyperOS can stop background apps; the app cannot promise delivery after force-stop, OEM termination or notification suppression.
+See [launcher footprint correction](docs/LAUNCHER_SCALING.md), [Stage 1.2 icon corrections](docs/STAGE_1_2.md), [Stage 1.1 changes and validation](docs/STAGE_1_1.md), [implementation and validation](docs/IMPLEMENTATION.md) and the [physical-device checklist](docs/DEVICE_TEST_CHECKLIST.md). Android and HyperOS can stop background apps; the app cannot promise delivery after force-stop, OEM termination or notification suppression.
