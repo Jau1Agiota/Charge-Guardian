@@ -6,6 +6,8 @@ import android.app.Notification
 import android.app.NotificationManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.drawable.Icon
+import android.os.Parcel
 import android.graphics.Path
 import android.graphics.RectF
 import kotlin.math.*
@@ -159,6 +161,35 @@ class IconNotificationTest {
         assertEquals(NotificationManager.IMPORTANCE_LOW, app.getSystemService(NotificationManager::class.java)
             .getNotificationChannel(notification.channelId).importance)
         assertEquals("Charge Guardian", app.applicationInfo.loadLabel(app.packageManager).toString())
+    }
+
+    @Test fun allNotificationIconsRemainResolvableAfterAndroidParcelSerialization() = runBlocking {
+        shadowOf(app).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        val alerts = Alerts(app)
+        val manager = app.getSystemService(NotificationManager::class.java)
+        val notifications = mutableListOf(alerts.ongoing())
+        for (test in listOf(false, true)) {
+            assertTrue(alerts.send(95, test))
+            notifications += shadowOf(manager).getNotification(if (test) 3 else 2)
+        }
+        for ((index, original) in notifications.withIndex()) {
+            val parcel = Parcel.obtain()
+            try {
+                original.writeToParcel(parcel, 0)
+                parcel.setDataPosition(0)
+                val forwarded = Notification.CREATOR.createFromParcel(parcel)
+                assertEquals(Icon.TYPE_RESOURCE, forwarded.smallIcon.type)
+                assertEquals(app.packageName, forwarded.smallIcon.resPackage)
+                assertEquals(R.drawable.ic_notification, forwarded.smallIcon.resId)
+                assertNotNull(forwarded.smallIcon.loadDrawable(app))
+                assertEquals(Notification.VISIBILITY_PRIVATE, forwarded.visibility)
+                assertEquals(if (index == 0) Notification.PRIORITY_DEFAULT else Notification.PRIORITY_HIGH, forwarded.priority)
+                assertEquals(original.channelId, forwarded.channelId)
+                assertEquals(original.category, forwarded.category)
+                assertEquals(original.extras.getString(Notification.EXTRA_TITLE), forwarded.extras.getString(Notification.EXTRA_TITLE))
+                assertEquals(original.extras.getString(Notification.EXTRA_TEXT), forwarded.extras.getString(Notification.EXTRA_TEXT))
+            } finally { parcel.recycle() }
+        }
     }
 
     private fun save(bitmap: Bitmap, name: String) {

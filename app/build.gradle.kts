@@ -3,7 +3,7 @@ android {
  namespace = "com.chargeguardian.app"
  compileSdk = 36
  buildToolsVersion = "36.0.0"
- defaultConfig { applicationId = "com.chargeguardian.app"; minSdk = 26; targetSdk = 36; versionCode = 4; versionName = "1.2.1" }
+ defaultConfig { applicationId = "com.chargeguardian.app"; minSdk = 26; targetSdk = 36; versionCode = 5; versionName = "1.3.0" }
  buildFeatures { compose = true; buildConfig = true }
  testOptions { unitTests.isIncludeAndroidResources = true }
  compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
