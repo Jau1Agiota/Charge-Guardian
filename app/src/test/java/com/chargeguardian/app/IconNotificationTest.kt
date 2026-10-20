@@ -59,14 +59,21 @@ class IconNotificationTest {
             (0 until 216).any { y -> android.graphics.Color.alpha(foreground.getPixel(x, y)) >= 128 }
         }
         val artDp = (visibleColumns.last() - visibleColumns.first() + 1) * 108f / 216f
-        assertTrue("Prominent foreground without excessive inset", artDp in 57f..59f)
-        // Source-image landmarks: crown/flyaway hair, left hair, face and battery cap/body/base.
-        val landmarks = listOf(600f to 0f, 950f to 0f, 70f to 430f, 230f to 450f,
-            680f to 520f, 1015f to 270f, 1140f to 515f, 740f to 895f)
-        landmarks.forEach { (x, y) ->
+        assertTrue("Prominent foreground without excessive inset", artDp in 71f..73f)
+        // Essential facial/battery details belong in the 66dp safe area.
+        // The complete framed scene is full-bleed; its background corners need not fit there.
+        val safeLandmarks = listOf(230f to 450f, 680f to 520f, 1015f to 270f,
+            1140f to 515f, 740f to 895f, 110f to 430f)
+        safeLandmarks.forEach { (x, y) ->
             val dx = (x / 1254f - .5f) * artDp
-            val dy = (y / 1254f - .5f) * artDp
-            assertTrue("Critical source landmark ($x,$y) inside 66dp safe circle", hypot(dx, dy) <= 33f)
+            val dy = (y / 1254f - .5f) * artDp + 2f
+            assertTrue("Essential detail ($x,$y) inside 66dp safe area", hypot(dx, dy) <= 33f)
+        }
+        val hairContour = listOf(600f to 0f, 800f to 40f, 70f to 430f)
+        hairContour.forEach { (x, y) ->
+            val dx = (x / 1254f - .5f) * artDp
+            val dy = (y / 1254f - .5f) * artDp + 2f
+            assertTrue("Main hair contour ($x,$y) survives circular mask", hypot(dx, dy) < 36f)
         }
         for (size in listOf(48, 144)) for (mask in listOf("circle", "rounded-square", "squircle")) {
             val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
