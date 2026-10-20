@@ -24,6 +24,7 @@ class GuardianViewModel(app: Application) : AndroidViewModel(app) {
         _battery.value = getApplication<Application>().battery()
         notifications.value = Alerts(getApplication()).allowed()
     }
+    fun appearance(value: Appearance) { viewModelScope.launch { store.appearance(value) } }
     fun threshold(value: Int) { viewModelScope.launch { store.threshold(value) } }
     fun monitoring(enable: Boolean) {
         viewModelScope.launch {
@@ -38,9 +39,9 @@ class GuardianViewModel(app: Application) : AndroidViewModel(app) {
             refresh()
         }
     }
-    fun test() {
+    fun test() { viewModelScope.launch {
         message.value = if (Alerts(getApplication()).send(settings.value.threshold, true)) "Test notification sent. Check your phone and watch." else "Notifications are blocked. Enable them in Android settings."
         refresh()
-    }
+    } }
     override fun onCleared() { getApplication<Application>().unregisterReceiver(receiver) }
 }
